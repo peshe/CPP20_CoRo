@@ -37,7 +37,7 @@ public:
     };
 
 public:
-    CoState(std::coroutine_handle<promise_type> h) :
+    CoState(CoroHandle h) :
         hnd {h}
     {}
     ~CoState()
@@ -120,10 +120,9 @@ CoState fun3(int num)
     std::cout << "State 3 END\n";
 }
 
-
 int main()
 {
-    CoState machine = fun1(5);
+    CoState machine = fun1(10);
     
     while (machine.nextStep()) {
         std::cout << "Next step in the SM\n";

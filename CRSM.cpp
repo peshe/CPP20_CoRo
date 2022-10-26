@@ -22,7 +22,7 @@ public:
                 return hnd.promise().nextHandle; // return the next coro to resume
             }
             else {
-                return std::noop_coroutine(); // no next coro => return to caller
+                return std::noop_coroutine();    // no next coro => return to caller
             }
         }
 
@@ -60,7 +60,7 @@ public:
     };
 
 public:
-    CoState(std::coroutine_handle<promise_type> h) :
+    CoState(CoroHandle h) :
         hnd {h}
     {}
     

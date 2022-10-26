@@ -7,14 +7,14 @@
 #define dump(text)
 #endif
 
-class [[nodiscard]] CoroSimple 
+class [[nodiscard]] CoroSimple
 {
 public:
     struct promise_type;
     using CoroHandle = std::coroutine_handle<promise_type>;
 
 public:
-    CoroSimple(auto h) : 
+    CoroSimple(CoroHandle h) :
         hnd{ h }
     {
         dump("CoroSimple\tctor");
@@ -79,23 +79,25 @@ struct CoroSimple::promise_type
 
 CoroSimple printSomeNumbers(int num)
 {
-    std::cout << "Coroutine started with param: " << num << "\n";
+    std::cout << "Coroutine started with param: " << num << "\n\n";
     for (int val = 1; val <= num; ++val) {
         std::cout << " value: " << val << '\n';
         co_await std::suspend_always{};
     }
-    std::cout << "Coroutine with param: " << num << " ended\n";
+    std::cout << "\nCoroutine with param: " << num << " ended\n";
 }
 
 int main()
 {
     {
-        dump("main\t\tStarted");
+        dump("main\t\tStarted\n");
         CoroSimple task = printSomeNumbers(3);
-        dump("main\t\tTask created");
+        dump("\nmain\t\tTask created\n");
 
         while (task.resume())
-            dump("main\t\tin the loop");
+            dump("main\t\tin the loop\n");
+
+        dump("\nmain\t\tLeave inner block\n");
     }
     dump("main\t\tEnded");
     return 0;

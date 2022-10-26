@@ -9,7 +9,7 @@ public:
     using CoroHandle = std::coroutine_handle<promise_type>;
 
 public:
-    CoGenerator(auto h) :
+    CoGenerator(CoroHandle h) :
         hnd{ h }
     {}
     ~CoGenerator()
@@ -46,7 +46,7 @@ struct CoGenerator::promise_type
         return {};
     }
 
-    std::suspend_always yield_value(unsigned num) noexcept
+    std::suspend_always yield_value(unsigned long long num) noexcept
     {
         last = num;
         return {}; // - suspend coroutine
@@ -90,8 +90,9 @@ CoGenerator allPrimeNumbers()
 
     unsigned long long num = 3;
     for (;;) {
-        if (isPrime(num))
+        if (isPrime(num)) {
             co_yield num;
+        }
         num += 2;
     }
 }
@@ -101,8 +102,9 @@ int main()
     int cnt = 10;
     CoGenerator gen = allPrimeNumbers();
 
-    for (int i = 0; i < cnt; ++i)
+    for (int i = 0; i < cnt; ++i) {
         std::cout << gen.getNextPrime() << ' ';
+    }
 
     return 0;
 }
