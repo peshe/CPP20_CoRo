@@ -10,16 +10,20 @@
 class [[nodiscard]] CoroSimple
 {
 public:
+    // Having such an internal struct is required
     struct promise_type;
     using CoroHandle = std::coroutine_handle<promise_type>;
 
 public:
+    // This constructor is used from
+    //  CoroSimple::promise_type::get_return_object.
     CoroSimple(CoroHandle h) :
         hnd{ h }
     {
         dump("CoroSimple\tctor");
     }
 
+    // We have to deal with resources
     ~CoroSimple()
     {
         dump("CoroSimple\tdtor");
@@ -28,10 +32,13 @@ public:
         }
     }
 
+    // copying and moving is non-trivial,
+    //  so we prevent it here for simplicity
     CoroSimple(const CoroSimple&) = delete;
     CoroSimple& operator=(const CoroSimple&) = delete;
 
 public:
+    // A public method to interact with this handle
     bool resume() const 
     {
         dump("CoroSimple\tresume");
@@ -46,31 +53,46 @@ private:
     CoroHandle hnd;
 };
 
+
+// The required promise class.
+// It holds the coroutine user context.
 struct CoroSimple::promise_type 
 {
+    // Required method to create handler
     CoroSimple get_return_object()
     {
         dump("promise_type\tget_return_object");
+        // returning object created from a static factory method is
+        //  the most popular implementation.
         return CoroSimple{ CoroHandle::from_promise(*this) };
     }
 
+    // Required method to deal if the coroutine
+    //  will start eagerly or will suspend (lazy start)
     std::suspend_always initial_suspend() const noexcept
     {
         dump("promise_type\tinitial_suspend");
         return {};
     }
     
+    // Required method to deal if the coroutine
+    //  will return the context to the caller or will be destroyed
     std::suspend_always final_suspend() const noexcept
     {
         dump("promise_type\tfinal_suspend");
         return {};
     }
     
+    // Required method to deal with case of unhandled exception
     void unhandled_exception()
     {
         std::terminate();
     }
     
+    // Required method called on co_return with no value
+    // If there is co_return with a value a method
+    // return_value(T) is required, where T is the type returned
+    // It is not allowed to have both methods!
     void return_void() const noexcept 
     {
         dump("promise_type\treturn_void");
@@ -82,7 +104,7 @@ CoroSimple printSomeNumbers(int num)
     std::cout << "Coroutine started with param: " << num << "\n\n";
     for (int val = 1; val <= num; ++val) {
         std::cout << " value: " << val << '\n';
-        co_await std::suspend_always{};
+        co_await std::suspend_always{};     // Suspend execution here
     }
     std::cout << "\nCoroutine with param: " << num << " ended\n";
 }
@@ -94,8 +116,9 @@ int main()
         CoroSimple task = printSomeNumbers(3);
         dump("\nmain\t\tTask created\n");
 
-        while (task.resume())
+        while (task.resume()) {
             dump("main\t\tin the loop\n");
+        }
 
         dump("\nmain\t\tLeave inner block\n");
     }

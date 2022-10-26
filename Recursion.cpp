@@ -33,7 +33,7 @@ public:
         void return_void() const noexcept
         {}
 
-        CoState::CoroHandle nextHandle = nullptr;
+        CoState::CoroHandle nextHandle = nullptr; // Next coroutine in the calling stack
     };
 
 public:
@@ -69,16 +69,23 @@ public:
 
 public:
 // Awaiter part
+
+    // Required method
+    // decide if the coroutine will be suspended or not
     bool await_ready()
     {
         return false;   // DO suspend!
     }
 
+    // Required method
+    // called on suspension
     void await_suspend(CoroHandle caller)
     {
         caller.promise().nextHandle = hnd; // store sub-coroutine and suspend
     }
 
+    // Required method
+    // called before resume
     void await_resume() { }
 
 private:

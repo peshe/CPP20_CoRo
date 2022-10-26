@@ -7,9 +7,11 @@ public:
     struct promise_type;
     using CoroHandle = std::coroutine_handle<promise_type>;
 
+    // We use this class to deal on pass execution to the 
+    // latest function called on the end of the coroutine
     struct FinalAwaiter
     {
-        bool await_ready() noexcept
+        constexpr bool await_ready() const noexcept
         {
             return false;
         }
@@ -19,14 +21,14 @@ public:
             // the coroutine is now suspended at the final suspend point
             // - resume its continuation if there is one
             if (hnd.promise().nextHandle) {
-                return hnd.promise().nextHandle; // return the next coro to resume
+                return hnd.promise().nextHandle; // return the next to resume
             }
             else {
-                return std::noop_coroutine();    // no next coro => return to caller
+                return std::noop_coroutine();    // no next => return to caller with a special handle
             }
         }
 
-        void await_resume() noexcept
+        void await_resume() const noexcept
         {
         }
     };
@@ -118,14 +120,12 @@ CoState state1(int num)
     else {
         co_await state3(7);
     }
-    //std::cout << "End of state 1 " << num << "\n";
 }
 
 CoState state2(int num)
 {
     std::cout << "State 2 " << num << "\n";
     co_await state1(num - 2);
-    //std::cout << "End of state 2 " << num << "\n";;
 }
 
 CoState state3(int num)
@@ -134,14 +134,13 @@ CoState state3(int num)
     if (num > 0) {
         co_await state3(num - 2);
     }
-    //std::cout << "End of state 3 " << num << "\n";;
 }
 
 int main()
 {
     CoState machine = state1(10);
     
-    machine.start();
+    machine.start();    // Start and wait for the end of execution
 
     return 0;
 }

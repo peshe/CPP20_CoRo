@@ -23,6 +23,8 @@ public:
     CoGenerator& operator=(const CoGenerator&) = delete;
 
 public:
+    // A public method to get next number
+    // Here we hide the mechanism of resuming the sleeping coroutine
     unsigned long long getNextPrime();
 
 private:
@@ -46,10 +48,12 @@ struct CoGenerator::promise_type
         return {};
     }
 
+    // Required method to call on co_yield.
+    // The parameter type should correspond to the yielded value.
     std::suspend_always yield_value(unsigned long long num) noexcept
     {
-        last = num;
-        return {}; // - suspend coroutine
+        last = num; // Store the computed prime for later use
+        return {}; // and suspend the coroutine (return control to the caller)
     }
 
     void unhandled_exception()
@@ -57,7 +61,7 @@ struct CoGenerator::promise_type
         std::terminate();
     }
 
-    constexpr void return_void() const noexcept
+    void return_void() const noexcept
     {}
 
     unsigned long long last = 0;
